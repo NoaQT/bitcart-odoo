@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="payment_acquirer_form" model="ir.ui.view">
+        <field name="name">Bitcart Provider Form</field>
+        <field name="model">payment.acquirer</field>
+        <field name="inherit_id" ref="payment.payment_acquirer_form"/>
+        <field name="arch" type="xml">
+            <group name="acquirer" position='inside'>
+                <group attrs="{'invisible': [('provider', '!=', 'bitcart')]}">
+                    <field name="api_url"
+                           attrs="{'required':[('provider', '=', 'bitcart'), ('state', '!=', 'disabled')]}"/>
+                    <field name="admin_url"
+                           attrs="{'required':[('provider', '=', 'bitcart'), ('state', '!=', 'disabled')]}"/>
+                    <field name="store_id"
+                           attrs="{'required':[('provider', '=', 'bitcart'), ('state', '!=', 'disabled')]}"/>
+                    <a href="https://docs.bitcart.ai/integrations/odoo"
+                       target="_blank"
+                       colspan="2">
+                        How to configure the odoo integration?
+                    </a>
+                </group>
+            </group>
+        </field>
+    </record>
+
+</odoo>

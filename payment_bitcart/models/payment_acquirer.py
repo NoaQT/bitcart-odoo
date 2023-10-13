@@ -2,9 +2,9 @@ from odoo import fields, models
 
 
 class PaymentProvider(models.Model):
-    _inherit = "payment.provider"
+    _inherit = "payment.acquirer"
 
-    code = fields.Selection(
+    provider = fields.Selection(
         selection_add=[("bitcart", "Bitcart")],
         ondelete={"bitcart": "set default"},
     )

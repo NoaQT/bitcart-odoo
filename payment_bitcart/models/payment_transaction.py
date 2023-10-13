@@ -16,18 +16,18 @@ class PaymentTransaction(models.Model):
 
     def _get_specific_rendering_values(self, processing_values):
         res = super()._get_specific_rendering_values(processing_values)
-        if self.provider_code != "bitcart":
+        if self.provider != "bitcart":
             return res
-        base_url = self.provider_id.get_base_url()
+        base_url = self.acquirer_id.get_base_url()
         data = requests.post(
             urls.url_join(
-                self.provider_id.api_url,
+                self.acquirer_id.api_url,
                 f"/invoices/order_id/{quote_plus(processing_values['reference'])}",
             ),
             json={
                 "price": processing_values["amount"],
                 "currency": self.currency_id.name,
-                "store_id": self.provider_id.store_id,
+                "store_id": self.acquirer_id.store_id,
                 "buyer_email": self.partner_email,
                 "order_id": processing_values["reference"],
                 "notification_url": urls.url_join(
@@ -39,11 +39,11 @@ class PaymentTransaction(models.Model):
         return {
             "id": data["id"],
             "checkout_url": urls.url_join(
-                self.provider_id.admin_url, f"/i/{data['id']}"
+                self.acquirer_id.admin_url, f"/i/{data['id']}"
             ),
         }
 
-    def _get_tx_from_notification_data(self, provider_code, notification_data):
+    def _get_tx_from_feedback_data(self, provider_code, notification_data):
         """Override of payment to find the transaction based on Bitcart data.
 
         :param str provider_code: The code of the provider that handled the transaction
@@ -52,13 +52,13 @@ class PaymentTransaction(models.Model):
         :rtype: recordset of `payment.transaction`
         :raise: ValidationError if the data match no transaction
         """
-        tx = super()._get_tx_from_notification_data(provider_code, notification_data)
+        tx = super()._get_tx_from_feedback_data(provider_code, notification_data)
         if provider_code != "bitcart" or len(tx) == 1:
             return tx
 
         reference = notification_data.get("order_id")
         tx = self.search(
-            [("reference", "=", reference), ("provider_code", "=", "bitcart")]
+            [("reference", "=", reference), ("provider", "=", "bitcart")]
         )
         if not tx:
             raise ValidationError(
@@ -66,15 +66,15 @@ class PaymentTransaction(models.Model):
             )
         return tx
 
-    def _process_notification_data(self, notification_data):
-        super()._process_notification_data(notification_data)
-        if self.provider_code != "bitcart":
+    def _process_feedback_data(self, notification_data):
+        super()._process_feedback_data(notification_data)
+        if self.provider != "bitcart":
             return
 
         txn_id = notification_data.get("id")
         if not txn_id:
             raise ValidationError(f"Bitcart: Missing value for txn_id ({txn_id}).")
-        self.provider_reference = txn_id
+        self.acquirer_reference = txn_id
 
         payment_status = notification_data.get("status")
         if payment_status == "complete":

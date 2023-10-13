@@ -1,1 +1,1 @@
-from . import payment_provider, payment_transaction  # noqa: F401
+from . import payment_acquirer, payment_transaction  # noqa: F401

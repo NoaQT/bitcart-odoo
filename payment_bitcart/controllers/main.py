@@ -36,8 +36,8 @@ class BitcartController(http.Controller):
         )
         try:
             tx_sudo = request.env["payment.transaction"].sudo()
-            provider = tx_sudo.provider_id.search([("code", "=", "bitcart")])
-            api_url = provider.api_url
+            acquirer = tx_sudo.acquirer_id.search([("code", "=", "bitcart")])
+            api_url = acquirer.api_url
             response = requests.get(urls.url_join(api_url, f"/invoices/{data['id']}"))
             response.raise_for_status()
             full_invoice = response.json()
@@ -46,7 +46,7 @@ class BitcartController(http.Controller):
                 or full_invoice["status"] != data["status"]
             ):
                 raise Forbidden()
-            tx_sudo._handle_notification_data("bitcart", full_invoice)
+            tx_sudo._handle_feedback_data("bitcart", full_invoice)
         except (
             ValidationError,
             requests.exceptions.ConnectionError,
